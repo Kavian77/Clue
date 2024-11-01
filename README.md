@@ -235,21 +235,19 @@ CoreTracker.getInstance({
 
 ## 📋 API Reference
 
-| Option          | Type                     | Default  | Description                           |
-| --------------- | ------------------------ | -------- | ------------------------------------- |
-| `endpoint`      | `string`                 | -        | **Required**. URL for sending events. |
-| `headers`       | `Record<string, string>` | `{}`     | Optional custom headers.              |
-| `method`        | `'POST'｜'PUT'`          | `'POST'` | HTTP method for requests.             |
-| `batchInterval` | `number`                 | `5000`   | Time (ms) between batch sends.        |
-| `batchSizeKB`   | `number｜'disabled'`     | `500`    | Maximum batch size in KB.             |
-| `retryAttempts` | `number`                 | `3`      | Retry attempts for failed requests.   |
-
-| `retryDelay` | `number` | `1000` | Base delay in ms between retries. |
-
-| `middlewares` | `EventMiddleware[]` | `[]` | Functions to transform events before sending. |
-| `onSuccess` | `SuccessHandler` | - | Callback on successful send. |
-| `onError` | `ErrorHandler` | - | Callback on failed send. |
-| `debug` | `boolean` | `false` | Enables debug logging. |
+| Option          | Type                     | Default  | Description                                   |
+| --------------- | ------------------------ | -------- | --------------------------------------------- |
+| `endpoint`      | `string`                 | -        | **Required**. URL for sending events.         |
+| `headers`       | `Record<string, string>` | `{}`     | Optional custom headers.                      |
+| `method`        | `'POST'｜'PUT'`          | `'POST'` | HTTP method for requests.                     |
+| `batchInterval` | `number`                 | `5000`   | Time (ms) between batch sends.                |
+| `batchSizeKB`   | `number｜'disabled'`     | `500`    | Maximum batch size in KB.                     |
+| `retryAttempts` | `number`                 | `3`      | Retry attempts for failed requests.           |
+| `retryDelay`    | `number`                 | `1000`   | Base delay in ms between retries.             |
+| `middlewares`   | `EventMiddleware[]`      | `[]`     | Functions to transform events before sending. |
+| `onSuccess`     | `SuccessHandler`         | -        | Callback on successful send.                  |
+| `onError`       | `ErrorHandler`           | -        | Callback on failed send.                      |
+| `debug`         | `boolean`                | `false`  | Enables debug logging.                        |
 
 ---
 
