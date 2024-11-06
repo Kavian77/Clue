@@ -260,4 +260,4 @@ CoreTracker.getInstance({
 
 ## 📝 License
 
-MIT © [Your Organization]
+MIT © Piq
