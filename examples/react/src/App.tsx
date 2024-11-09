@@ -47,7 +47,7 @@ export function App() {
               data-track-click="true"
               data-track-context='{"location":"header"}'
             >
-              HM
+              Hamburger Menu
             </button>
             <h1 className="text-2xl font-bold">PIQ Demo</h1>
           </div>

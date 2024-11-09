@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@piq/core': '/packages/core/src',
-      '@piq/click-tracker': '/packages/trackers/click-tracker/src',
-      '@piq/utils': '/packages/utils/src',
+      // TODO: Remove these once the packages are published
+      '@piq/core': '../../../packages/core/src',
+      '@piq/click-tracker': '../../../packages/trackers/click-tracker/src',
     },
   },
 });

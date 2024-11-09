@@ -18,10 +18,10 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@piq/core": ["packages/core/src"],
-      "@piq/click-tracker": ["packages/trackers/click-tracker/src"],
-      "@piq/utils": ["packages/utils/src"]
+      /* TODO: Remove these when the packages are published */
+      "@piq/core": ["../../packages/core/src"],
+      "@piq/click-tracker": ["../../packages/trackers/click-tracker/src"],
     }
   },
-  "include": ["src", "packages/*/src"]
+  "include": ["src", "../../packages/*/src"]
 }
