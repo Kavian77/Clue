@@ -1,245 +1,168 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { StorageManager } from '../storage';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, beforeEach, afterEach, it, expect, vi, Mock } from "vitest";
+import { openDB, IDBPDatabase } from "idb";
+import { StorageManager } from "../storage";
+import type { TrackingEvent } from "../types";
 
-// Mock IndexedDB
-const indexedDB = {
-  open: vi.fn(),
-  deleteDatabase: vi.fn(),
-};
+vi.mock("idb", () => ({
+  openDB: vi.fn(),
+}));
 
-const IDBRequest = {
-  result: {
-    createObjectStore: vi.fn(),
-    transaction: vi.fn(),
-    close: vi.fn(),
-    version: 1,
-  },
-  onerror: vi.fn(),
-  onsuccess: vi.fn(),
-  onupgradeneeded: vi.fn(),
-};
+describe("StorageManager", () => {
+  let storageManager: StorageManager;
+  let mockDB: IDBPDatabase<any>;
+  let mockObjectStore: any;
+  let mockTransaction: any;
 
-const IDBTransaction = {
-  objectStore: vi.fn(),
-  oncomplete: vi.fn(),
-  onerror: vi.fn(),
-};
-
-const IDBObjectStore = {
-  add: vi.fn(),
-  getAll: vi.fn(),
-  delete: vi.fn(),
-};
-
-// Setup global mocks
-vi.stubGlobal('indexedDB', indexedDB);
-
-describe('StorageManager', () => {
-  let storage: StorageManager;
+  const mockEvent: TrackingEvent = {
+    id: "123",
+    timestamp: Date.now(),
+    type: "test",
+    context: { foo: "bar" },
+  };
 
   beforeEach(() => {
-    // Enable fake timers
     vi.useFakeTimers();
-    
-    vi.clearAllMocks();
-    
-    // Setup IndexedDB mock behavior
-    indexedDB.open.mockReturnValue(IDBRequest);
-    IDBRequest.result.transaction.mockReturnValue(IDBTransaction);
-    IDBTransaction.objectStore.mockReturnValue(IDBObjectStore);
-    
-    storage = new StorageManager();
+
+    mockObjectStore = {
+      add: vi.fn(),
+      delete: vi.fn(),
+      getAll: vi.fn(),
+    };
+
+    mockTransaction = {
+      objectStore: vi.fn().mockReturnValue(mockObjectStore),
+      done: Promise.resolve(),
+    };
+
+    mockDB = {
+      transaction: vi.fn().mockReturnValue(mockTransaction),
+      createObjectStore: vi.fn(),
+      objectStoreNames: {
+        contains: vi.fn().mockReturnValue(false),
+      },
+    } as unknown as IDBPDatabase<any>;
+
+    (openDB as Mock).mockResolvedValue(mockDB);
+
+    storageManager = new StorageManager();
   });
 
   afterEach(() => {
-    // Restore real timers
+    vi.clearAllMocks();
     vi.useRealTimers();
   });
 
-  describe('init', () => {
-    test('initializes database successfully', async () => {
-      const initPromise = storage.init();
-      
-      // Simulate successful database open
-      IDBRequest.onsuccess(new Event('success'));
-      
-      // Fast-forward any timers
-      await vi.runAllTimersAsync();
-      
-      await expect(initPromise).resolves.toBeUndefined();
-      expect(indexedDB.open).toHaveBeenCalled();
+  describe("init()", () => {
+    it("should initialize the database successfully", async () => {
+      await expect(storageManager.init()).resolves.toBeUndefined();
+      expect(openDB).toHaveBeenCalledTimes(1);
+      expect(openDB).toHaveBeenCalledWith(
+        "piq_tracking",
+        1,
+        expect.any(Object)
+      );
     });
 
-    test('handles database open error', async () => {
-      indexedDB.open.mockImplementation(() => {
-        throw new Error('Failed to open database');
-      });
-
-      await expect(storage.init()).rejects.toThrow('Failed to open database');
+    it("should only initialize once when called multiple times", async () => {
+      await storageManager.init();
+      await storageManager.init();
+      expect(openDB).toHaveBeenCalledTimes(1);
     });
 
-    test('creates object store during upgrade', async () => {
-      const initPromise = storage.init();
-      
-      // Simulate database upgrade
-      IDBRequest.onupgradeneeded(new Event('upgradeneeded'));
-      IDBRequest.onsuccess(new Event('success'));
-      
-      // Fast-forward any timers
-      await vi.runAllTimersAsync();
-      
-      await initPromise;
-      expect(IDBRequest.result.createObjectStore).toHaveBeenCalled();
+    it("should handle initialization errors", async () => {
+      (openDB as Mock).mockRejectedValueOnce(new Error("DB Error"));
+      await expect(storageManager.init()).rejects.toThrow("DB Error");
     });
   });
 
-  describe('storePendingEvents', () => {
-    test('stores events successfully', async () => {
-      const events = [{
-        id: '1',
-        type: 'test',
-        timestamp: Date.now(),
-        context: {},
-        element: { tag: 'button', attributes: {} }
-      }];
-
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
-
-      // Setup store success
-      IDBObjectStore.add.mockImplementation(() => ({
-        onsuccess: vi.fn()
-      }));
-
-      const storePromise = storage.storePendingEvents(events);
-      IDBTransaction.oncomplete(new Event('complete'));
-
-      // Fast-forward any timers
-      await vi.runAllTimersAsync();
-
-      await expect(storePromise).resolves.toBeUndefined();
-      expect(IDBObjectStore.add).toHaveBeenCalledWith(events[0]);
+  describe("storePendingEvents()", () => {
+    beforeEach(async () => {
+      await storageManager.init();
     });
 
-    test('handles store error', async () => {
-      const events = [{
-        id: '1',
-        type: 'test',
-        timestamp: Date.now(),
-        context: {},
-        element: { tag: 'button', attributes: {} }
-      }];
+    it("should store events successfully", async () => {
+      mockObjectStore.add.mockResolvedValue(undefined);
+      await expect(
+        storageManager.storePendingEvents([mockEvent])
+      ).resolves.toBeUndefined();
+      expect(mockObjectStore.add).toHaveBeenCalledWith(mockEvent);
+    });
 
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
+    it("should fail after max retries", async () => {
+      // https://github.com/vitest-dev/vitest/discussions/3689#discussioncomment-8362934
+      const rejectSpy = vi.fn();
+      mockObjectStore.add.mockRejectedValue(new Error("Transaction failed"));
 
-      // Setup store error
-      IDBTransaction.onerror(new Error('Store failed'));
+      storageManager
+        .storePendingEvents([mockEvent])
+        .catch((err) => rejectSpy(err));
 
-      await expect(storage.storePendingEvents(events)).rejects.toThrow();
+      for (let i = 0; i < 3; i++) {
+        vi.advanceTimersByTime(Math.pow(2, i) * 1000);
+        await vi.runAllTimersAsync();
+      }
+
+      await expect(rejectSpy).toHaveBeenCalledWith(
+        new Error("Transaction failed")
+      );
     });
   });
 
-  describe('getPendingEvents', () => {
-    test('retrieves events successfully', async () => {
-      const events = [{
-        id: '1',
-        type: 'test',
-        timestamp: Date.now(),
-        context: {},
-        element: { tag: 'button', attributes: {} }
-      }];
-
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
-
-      // Setup successful retrieval
-      IDBObjectStore.getAll.mockImplementation(() => ({
-        onsuccess: (e: any) => {
-          e.target.result = events;
-          e.target.onsuccess?.();
-        }
-      }));
-
-      // Fast-forward any timers
-      await vi.runAllTimersAsync();
-
-      const result = await storage.getPendingEvents();
-      expect(result).toEqual(events);
+  describe("getPendingEvents()", () => {
+    beforeEach(async () => {
+      await storageManager.init();
     });
 
-    test('handles retrieval error', async () => {
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
+    it("should retrieve all events", async () => {
+      mockObjectStore.getAll.mockResolvedValue([mockEvent]);
+      await expect(storageManager.getPendingEvents()).resolves.toEqual([
+        mockEvent,
+      ]);
+      expect(mockObjectStore.getAll).toHaveBeenCalledTimes(1);
+    });
 
-      // Setup retrieval error
-      IDBObjectStore.getAll.mockImplementation(() => ({
-        onerror: (e: any) => {
-          e.target.error = new Error('Retrieval failed');
-          e.target.onerror?.();
-        }
-      }));
-
-      await expect(storage.getPendingEvents()).rejects.toThrow();
+    it("should handle errors when retrieving events", async () => {
+      mockObjectStore.getAll.mockRejectedValue(new Error("Read error"));
+      await expect(storageManager.getPendingEvents()).rejects.toThrow(
+        "Read error"
+      );
     });
   });
 
-  describe('clearPendingEvents', () => {
-    test('clears events successfully', async () => {
-      const events = [{
-        id: '1',
-        type: 'test',
-        timestamp: Date.now(),
-        context: {},
-        element: { tag: 'button', attributes: {} }
-      }];
-
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
-
-      // Setup successful deletion
-      IDBObjectStore.delete.mockImplementation(() => ({
-        onsuccess: vi.fn()
-      }));
-
-      const clearPromise = storage.clearPendingEvents(events);
-      IDBTransaction.oncomplete(new Event('complete'));
-
-      // Fast-forward any timers
-      await vi.runAllTimersAsync();
-
-      await expect(clearPromise).resolves.toBeUndefined();
-      expect(IDBObjectStore.delete).toHaveBeenCalledWith(['1', events[0].timestamp]);
+  describe("clearPendingEvents()", () => {
+    beforeEach(async () => {
+      await storageManager.init();
     });
 
-    test('handles clear error', async () => {
-      const events = [{
-        id: '1',
-        type: 'test',
-        timestamp: Date.now(),
-        context: {},
-        element: { tag: 'button', attributes: {} }
-      }];
+    it("should clear specified events", async () => {
+      mockObjectStore.delete.mockResolvedValue(undefined);
+      await expect(
+        storageManager.clearPendingEvents([mockEvent])
+      ).resolves.toBeUndefined();
+      expect(mockObjectStore.delete).toHaveBeenCalledWith([
+        mockEvent.id,
+        mockEvent.timestamp,
+      ]);
+    });
 
-      // Initialize storage
-      const initPromise = storage.init();
-      IDBRequest.onsuccess(new Event('success'));
-      await initPromise;
+    it("should fail after max retries while clearing", async () => {
+      // https://github.com/vitest-dev/vitest/discussions/3689#discussioncomment-8362934
+      const rejectSpy = vi.fn();
+      mockObjectStore.delete.mockRejectedValue(new Error("Transaction failed"));
 
-      // Setup deletion error
-      IDBTransaction.onerror(new Error('Clear failed'));
+      storageManager
+        .clearPendingEvents([mockEvent])
+        .catch((err) => rejectSpy(err));
 
-      await expect(storage.clearPendingEvents(events)).rejects.toThrow();
+      for (let i = 0; i < 3; i++) {
+        vi.advanceTimersByTime(Math.pow(2, i) * 1000);
+        await vi.runAllTimersAsync();
+      }
+
+      await expect(rejectSpy).toHaveBeenCalledWith(
+        new Error("Transaction failed")
+      );
     });
   });
 });

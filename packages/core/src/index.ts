@@ -1,117 +1,179 @@
-import { type TrackerOptions, type TrackingEvent, type BatchSize, type Tracker } from './types';
-import { StorageManager } from './storage';
-import { Logger } from './logger';
+import {
+  type TrackerOptions,
+  type TrackingEvent,
+  type BatchSize,
+  type Tracker,
+  EventDispatcher,
+} from "./types";
+import { StorageManager } from "./storage";
+import { Logger } from "./logger";
 
-export class CoreTracker {
-  private static instance: CoreTracker | null = null;
+const isOnBrowser = typeof window !== "undefined";
+
+export class Piq {
+  private static instance: Piq | null = null;
   private events: TrackingEvent[] = [];
-  private batchInterval: number;
-  private batchSizeKB: BatchSize;
+  private syncingInterval: number;
+  private maxBatchSizeInKB: BatchSize;
   private globalContext: Record<string, unknown>;
   private batchTimeout: number | null = null;
   private trackers: Map<string, Tracker> = new Map();
   private options: TrackerOptions;
   private storage: StorageManager;
   private isOnline: boolean;
-  private retryTimeout: number | null = null;
-  private initialized: boolean = false;
+  private isReady: boolean = false;
   private logger: Logger;
   private processingBatch: boolean = false;
-  private visibilityHandler: () => void;
 
   private constructor(options: TrackerOptions = {}) {
     this.options = options;
-    this.batchInterval = options.batchInterval ?? 5000;
-    this.batchSizeKB = options.batchSizeKB ?? 500;
-    this.globalContext = options.globalContext ?? {};
     this.storage = new StorageManager();
-    this.isOnline = navigator.onLine;
+    this.maxBatchSizeInKB = options.maxBatchSizeInKB ?? 500;
     this.logger = new Logger(options.debug ?? false);
+    this.globalContext = options.globalContext ?? {};
+    this.syncingInterval = options.syncingInterval ?? 5000;
+    this.isOnline = isOnBrowser ? navigator.onLine : true;
 
-    this.visibilityHandler = this.handleVisibilityChange.bind(this);
-
-    window.addEventListener('online', this.handleOnline.bind(this));
-    window.addEventListener('offline', this.handleOffline.bind(this));
-    document.addEventListener('visibilitychange', this.visibilityHandler);
+    this.handleOnline = this.handleOnline.bind(this);
+    this.handleOffline = this.handleOffline.bind(this);
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
   }
 
-  public static getInstance(options?: TrackerOptions): CoreTracker {
-    if (!CoreTracker.instance) {
-      CoreTracker.instance = new CoreTracker(options);
-    } else if (options) {
-      CoreTracker.instance.updateOptions(options);
+  private addGlobalListeners(): void {
+    window.addEventListener("online", this.handleOnline);
+    window.addEventListener("offline", this.handleOffline);
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+  }
+
+  private removeGlobalListeners(): void {
+    window.removeEventListener("online", this.handleOnline);
+    window.removeEventListener("offline", this.handleOffline);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
+  }
+
+  private async makeReady(): Promise<void> {
+    if (!this.isReady) {
+      await this.storage.init();
+      this.isReady = true;
     }
-    return CoreTracker.instance;
+  }
+
+  public static init(options?: TrackerOptions): Piq {
+    if (!Piq.instance) {
+      Piq.instance = new Piq(options);
+    } else if (options) {
+      Piq.instance.updateOptions(options);
+    }
+    return Piq.instance;
+  }
+
+  public async start(): Promise<void> {
+    if (!isOnBrowser) {
+      return;
+    }
+
+    this.addGlobalListeners();
+
+    await this.makeReady();
+
+    const pendingEvents = await this.storage.getPendingEvents();
+    if (pendingEvents.length > 0) {
+      this.logger.group("Startup");
+      this.logger.info("Processing stored events from previous session");
+      await this.tryProcessPendingEvents();
+      this.logger.groupEnd();
+    }
+
+    this.startBatchInterval();
+    this.trackers.forEach((tracker) => tracker.start());
+  }
+
+  public stop(): void {
+    if (this.batchTimeout) {
+      clearTimeout(this.batchTimeout);
+      this.batchTimeout = null;
+    }
+
+    this.trackers.forEach((tracker) => tracker.stop());
+
+    this.removeGlobalListeners();
+  }
+
+  public use(
+    TrackerConstructor: new (options: {
+      dispatcher: EventDispatcher;
+      name?: string;
+    }) => Tracker,
+    options: { name?: string } = {}
+  ): this {
+    const tracker = new TrackerConstructor({
+      ...options,
+      dispatcher: async (event) => {
+        await this.makeReady();
+        await this.track(event);
+      },
+    });
+
+    this.trackers.set(tracker.name, tracker);
+    return this;
   }
 
   private updateOptions(options: TrackerOptions): void {
     this.options = { ...this.options, ...options };
-    this.batchInterval = options.batchInterval ?? this.batchInterval;
-    this.batchSizeKB = options.batchSizeKB ?? this.batchSizeKB;
+    this.syncingInterval = options.syncingInterval ?? this.syncingInterval;
+    this.maxBatchSizeInKB = options.maxBatchSizeInKB ?? this.maxBatchSizeInKB;
     this.globalContext = { ...this.globalContext, ...options.globalContext };
     this.logger = new Logger(options.debug ?? false);
   }
 
-  public use(TrackerConstructor: new (options: TrackerOptions) => Tracker): this {
-    const tracker = new TrackerConstructor({
-      ...this.options,
-      onBatchDispatch: async (events) => {
-        if (!this.initialized) {
-          await this.storage.init();
-          this.initialized = true;
-        }
-        await this.track(events[0]);
-        return true;
-      }
-    });
-    this.trackers.set(tracker.type, tracker);
-    return this;
-  }
-
-  private async applyMiddlewares(events: TrackingEvent[]): Promise<TrackingEvent[]> {
+  private async applyMiddlewares(
+    events: TrackingEvent[]
+  ): Promise<TrackingEvent[]> {
     let processedEvents = [...events];
-    
+
     if (this.options.middlewares) {
       for (const middleware of this.options.middlewares) {
         try {
           processedEvents = await Promise.resolve(middleware(processedEvents));
         } catch (error) {
-          this.logger.error('Middleware error:', error);
+          this.logger.error("Middleware error:", error);
           throw error;
         }
       }
     }
-    
+
     return processedEvents;
   }
 
   private async sendEvents(events: TrackingEvent[]): Promise<boolean> {
     if (!this.options.endpoint) {
-      throw new Error('No endpoint configured for sending events');
+      throw new Error("No endpoint configured for sending events");
     }
 
     const processedEvents = await this.applyMiddlewares(events);
-    
     if (processedEvents.length === 0) {
       return true;
     }
-
+    
     const retryAttempts = this.options.retryAttempts ?? 3;
     const retryDelay = this.options.retryDelay ?? 1000;
     let attempt = 0;
-
+    
     while (attempt < retryAttempts) {
       try {
         const response = await fetch(this.options.endpoint, {
-          method: this.options.method ?? 'POST',
+          method: this.options.method ?? "POST",
           headers: {
-            'Content-Type': 'application/json',
-            ...this.options.headers
+            "Content-Type": "application/json",
+            ...this.options.headers,
           },
           body: JSON.stringify({ events: processedEvents }),
-          keepalive: document.visibilityState === 'hidden'
+          keepalive: document.visibilityState === "hidden",
         });
-
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -121,49 +183,19 @@ export class CoreTracker {
       } catch (error) {
         attempt++;
         this.logger.error(`Attempt ${attempt} failed:`, error);
-        
+
         if (attempt === retryAttempts) {
           await this.options.onError?.(error as Error, processedEvents);
           return false;
         }
 
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        await new Promise((resolve) => {
+          setTimeout(resolve, retryDelay * attempt);
+        });
       }
     }
 
     return false;
-  }
-
-  public async start(): Promise<void> {
-    if (!this.initialized) {
-      await this.storage.init();
-      this.initialized = true;
-    }
-
-    const pendingEvents = await this.storage.getPendingEvents();
-    if (pendingEvents.length > 0) {
-      this.logger.group('Startup');
-      this.logger.info('Processing stored events from previous session');
-      await this.tryProcessPendingEvents();
-      this.logger.groupEnd();
-    }
-
-    this.startBatchInterval();
-    this.trackers.forEach(tracker => tracker.start());
-  }
-
-  public stop(): void {
-    if (this.batchTimeout) {
-      window.clearTimeout(this.batchTimeout);
-      this.batchTimeout = null;
-    }
-    if (this.retryTimeout) {
-      window.clearTimeout(this.retryTimeout);
-      this.retryTimeout = null;
-    }
-    this.trackers.forEach(tracker => tracker.stop());
-
-    document.removeEventListener('visibilitychange', this.visibilityHandler);
   }
 
   private calculateBatchSize(events: TrackingEvent[]): number {
@@ -171,15 +203,19 @@ export class CoreTracker {
   }
 
   private getBatchUpToSizeLimit(events: TrackingEvent[]): TrackingEvent[] {
-    if (this.batchSizeKB === 'disabled') return events;
+    if (this.maxBatchSizeInKB === "disabled") return events;
 
     let currentSize = 0;
     let batchEndIndex = events.length;
 
     if (events.length > 0) {
       const firstEventSize = this.calculateBatchSize([events[0]]);
-      if (firstEventSize > this.batchSizeKB) {
-        this.logger.warn(`Event size (${firstEventSize.toFixed(2)}KB) exceeds batch limit (${this.batchSizeKB}KB). Processing anyway.`);
+      if (firstEventSize > this.maxBatchSizeInKB) {
+        this.logger.warn(
+          `Event size (${firstEventSize.toFixed(2)}KB) exceeds batch limit (${
+            this.maxBatchSizeInKB
+          }KB). Processing anyway.`
+        );
         return [events[0]];
       }
       currentSize = firstEventSize;
@@ -187,7 +223,7 @@ export class CoreTracker {
 
     for (let i = 1; i < events.length; i++) {
       const eventSize = this.calculateBatchSize([events[i]]);
-      if (currentSize + eventSize > this.batchSizeKB) {
+      if (currentSize + eventSize > this.maxBatchSizeInKB) {
         batchEndIndex = i;
         break;
       }
@@ -198,64 +234,59 @@ export class CoreTracker {
   }
 
   private async track(event: TrackingEvent): Promise<void> {
-    if (!this.initialized) {
-      await this.storage.init();
-      this.initialized = true;
-    }
+    await this.makeReady();
 
     const enrichedEvent = {
       ...event,
-      context: { ...this.globalContext, ...event.context }
+      context: { ...this.globalContext, ...event.context },
     };
 
-    this.logger.group('Track Event');
-    this.logger.debug('Received event:', enrichedEvent);
-
+    this.logger.group("Track Event");
+    this.logger.debug("Received event:", enrichedEvent);
     await this.storage.storePendingEvents([enrichedEvent]);
-    this.logger.info('Event stored in IndexedDB');
-    
+    this.logger.info("Event stored in IndexedDB");
+
     this.events.push(enrichedEvent);
-    this.logger.info('Event added to memory queue. Queue size:', this.events.length);
+    this.logger.info(
+      "Event added to memory queue. Queue size:",
+      this.events.length
+    );
     this.logger.groupEnd();
   }
 
   private startBatchInterval(): void {
     if (this.batchTimeout) {
-      window.clearTimeout(this.batchTimeout);
+      clearTimeout(this.batchTimeout);
     }
 
     const processBatch = async () => {
-      if (!this.processingBatch && this.initialized) {
+      if (!this.processingBatch && this.isOnline) {
+        await this.makeReady();
         const pendingEvents = await this.storage.getPendingEvents();
-        
+
         if (pendingEvents.length > 0) {
           this.processingBatch = true;
-          this.logger.group('Batch Processing');
 
           try {
-            if (this.isOnline) {
-              this.logger.debug('Online - processing pending events');
-              await this.tryProcessPendingEvents();
-            } else {
-              this.logger.info('Offline - events stored for later');
-            }
+            this.logger.debug("Processing pending events");
+            await this.tryProcessPendingEvents();
           } catch (error) {
-            this.logger.error('Batch processing failed:', error);
+            this.logger.error("Batch processing failed:", error);
           } finally {
             this.processingBatch = false;
-            this.logger.groupEnd();
           }
         }
       }
 
-      this.batchTimeout = window.setTimeout(processBatch, this.batchInterval);
+      this.batchTimeout = setTimeout(processBatch, this.syncingInterval);
     };
 
-    this.batchTimeout = window.setTimeout(processBatch, this.batchInterval);
+    this.batchTimeout = setTimeout(processBatch, this.syncingInterval);
   }
 
   private async tryProcessPendingEvents(): Promise<void> {
-    if (!this.isOnline || !this.initialized) return;
+    if (!this.isOnline) return;
+    await this.makeReady();
 
     try {
       const pendingEvents = await this.storage.getPendingEvents();
@@ -263,59 +294,52 @@ export class CoreTracker {
         return;
       }
 
-      this.logger.group('Process Pending Events');
-      this.logger.debug('Found pending events:', pendingEvents.length);
-      
+      this.logger.group("Process Pending Events");
+      this.logger.debug("Found pending events:", pendingEvents.length);
+
       let remaining = [...pendingEvents];
       while (remaining.length > 0) {
         const batch = this.getBatchUpToSizeLimit(remaining);
         const success = await this.sendEvents(batch);
-        
         if (success) {
           await this.storage.clearPendingEvents(batch);
-          this.events = this.events.filter(event => 
-            !batch.some(e => e.id === event.id && e.timestamp === event.timestamp)
-          );
+          const batchIds = new Set(batch.map((e) => e.id));
+          this.events = this.events.filter((event) => !batchIds.has(event.id));
+        } else {
+          this.logger.warn("Stopping batch processing due to failure");
+          break;
         }
-        
-        if (!success || !this.isOnline) {
-          this.logger.warn('Stopping batch processing due to failure or offline state');
+
+        if (!this.isOnline) {
+          this.logger.warn("Stopping batch processing due to offline state");
           break;
         }
 
         remaining = remaining.slice(batch.length);
       }
-      
+
       this.logger.groupEnd();
     } catch (error) {
-      this.logger.error('Failed to process pending events:', error);
-      this.retryTimeout = window.setTimeout(
-        () => void this.tryProcessPendingEvents(),
-        60000
-      );
+      this.logger.error("Failed to process pending events:", error);
     }
   }
 
-  private handleOnline(): void {
-    this.logger.info('Network is online');
+  private handleOnline() {
+    this.logger.info("Network is online");
     this.isOnline = true;
     void this.tryProcessPendingEvents();
   }
 
-  private handleOffline(): void {
-    this.logger.info('Network is offline');
+  private handleOffline() {
+    this.logger.info("Network is offline");
     this.isOnline = false;
-    if (this.retryTimeout) {
-      window.clearTimeout(this.retryTimeout);
-      this.retryTimeout = null;
-    }
   }
 
-  private handleVisibilityChange(): void {
-    if (document.visibilityState === 'hidden') {
+  private handleVisibilityChange() {
+    if (document.visibilityState === "hidden") {
       void this.tryProcessPendingEvents();
     }
   }
 }
 
-export * from './types';
+export * from "./types";

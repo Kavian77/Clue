@@ -16,7 +16,6 @@ A **lightweight**, **type-safe**, **fault-tolerant** event tracking library for 
 - 📦 **Smart Batching**: Efficiently batches events to optimize network usage.
 - 🛠️ **Fault Tolerance**: Retries failed events with exponential backoff, ensuring reliable data delivery.
 - 🎨 **Framework Agnostic**: Integrates seamlessly with any JavaScript framework.
-- 🪶 **Zero Dependencies**: Lightweight, with no external dependencies.
 - 🔧 **Middleware Support**: Transform, enrich, or validate events before sending.
 - 🔄 **Automatic Context Inheritance**: Captures contextual data from nested elements up the DOM.
 - 🚀 **Performance Optimized**: Designed for high-performance applications.
@@ -57,7 +56,7 @@ PIQ Core includes built-in offline support, queuing events when users are offlin
 
 ### 📦 Smart Batching
 
-With smart batching, PIQ Core efficiently groups events to reduce the number of network requests, minimizing the impact on bandwidth and enhancing performance. Batching parameters like `batchInterval` and `batchSizeKB` can be configured to adjust the frequency and size of batches, striking a balance between real-time data and network load.
+With smart batching, PIQ Core efficiently groups events to reduce the number of network requests, minimizing the impact on bandwidth and enhancing performance. Batching parameters like `syncingInterval` and `maxBatchSizeInKB` can be configured to adjust the frequency and size of batches, striking a balance between real-time data and network load.
 
 ### 🔧 Middleware Support
 
@@ -67,9 +66,9 @@ PIQ Core enables you to add custom middleware functions that can transform, enri
 - Filter out sensitive data
 - Format or validate events for specific endpoints
 
-### 🚀 Lightweight, Zero-Dependency Design
+### 🚀 Lightweight
 
-PIQ Core is optimized for performance with zero dependencies, making it highly suitable for resource-conscious applications. Its modular design means you can include only the plugins you need, further keeping your bundle size minimal.
+PIQ Core is optimized for performance with the minimal dependencies, making it highly suitable for resource-conscious applications. Its modular design means you can include only the plugins you need, further keeping your bundle size minimal.
 
 ---
 
@@ -129,29 +128,29 @@ In this example, context attributes are defined at various levels, such as app-l
 
 ```html
 <!-- App Shell: Global context for all events -->
-<div data-track-context='{"app":"myapp","version":"1.0.0"}'>
+<div data-piq-context='{"app":"myapp","version":"1.0.0"}'>
   <!-- Navigation Section -->
-  <nav data-track-context='{"section":"navigation"}'>
+  <nav data-piq-context='{"section":"navigation"}'>
     <button
-      data-track-click="true"
-      data-track-id="menu-toggle"
-      data-track-context='{"action":"toggle-menu"}'
+      data-piq-click="true"
+      data-piq-id="menu-toggle"
+      data-piq-context='{"action":"toggle-menu"}'
     >
       Menu
     </button>
   </nav>
 
   <!-- Main Content with Nested Contexts -->
-  <main data-track-context='{"section":"content"}'>
+  <main data-piq-context='{"section":"content"}'>
     <!-- Product Section -->
     <section
-      data-track-context='{"subsection":"products","category":"electronics"}'
+      data-piq-context='{"subsection":"products","category":"electronics"}'
     >
-      <div data-track-context='{"product":"laptop","price":999}'>
+      <div data-piq-context='{"product":"laptop","price":999}'>
         <button
-          data-track-click="true"
-          data-track-id="add-to-cart"
-          data-track-context='{"action":"add-to-cart"}'
+          data-piq-click="true"
+          data-piq-id="add-to-cart"
+          data-piq-context='{"action":"add-to-cart"}'
         >
           Add to Cart
         </button>
@@ -206,8 +205,8 @@ Fine-tune control over retry logic and batching to optimize for responsiveness o
 ```typescript
 CoreTracker.getInstance({
   endpoint: "https://api.example.com/events",
-  batchInterval: 3000, // Send events every 3 seconds
-  batchSizeKB: 250, // Trigger send when batch reaches 250 KB
+  syncingInterval: 3000, // Send events every 3 seconds
+  maxBatchSizeInKB: 250, // Trigger send when batch reaches 250 KB
   retryAttempts: 5, // Retry up to 5 times on failure
   retryDelay: 500, // Start retries with a 500 ms delay
 });
@@ -235,19 +234,19 @@ CoreTracker.getInstance({
 
 ## 📋 API Reference
 
-| Option          | Type                     | Default  | Description                                   |
-| --------------- | ------------------------ | -------- | --------------------------------------------- |
-| `endpoint`      | `string`                 | -        | **Required**. URL for sending events.         |
-| `headers`       | `Record<string, string>` | `{}`     | Optional custom headers.                      |
-| `method`        | `'POST'｜'PUT'`          | `'POST'` | HTTP method for requests.                     |
-| `batchInterval` | `number`                 | `5000`   | Time (ms) between batch sends.                |
-| `batchSizeKB`   | `number｜'disabled'`     | `500`    | Maximum batch size in KB.                     |
-| `retryAttempts` | `number`                 | `3`      | Retry attempts for failed requests.           |
-| `retryDelay`    | `number`                 | `1000`   | Base delay in ms between retries.             |
-| `middlewares`   | `EventMiddleware[]`      | `[]`     | Functions to transform events before sending. |
-| `onSuccess`     | `SuccessHandler`         | -        | Callback on successful send.                  |
-| `onError`       | `ErrorHandler`           | -        | Callback on failed send.                      |
-| `debug`         | `boolean`                | `false`  | Enables debug logging.                        |
+| Option             | Type                     | Default  | Description                                   |
+| ------------------ | ------------------------ | -------- | --------------------------------------------- |
+| `endpoint`         | `string`                 | -        | **Required**. URL for sending events.         |
+| `headers`          | `Record<string, string>` | `{}`     | Optional custom headers.                      |
+| `method`           | `'POST'｜'PUT'`          | `'POST'` | HTTP method for requests.                     |
+| `syncingInterval`  | `number`                 | `5000`   | Time (ms) between batch sends.                |
+| `maxBatchSizeInKB` | `number｜'disabled'`     | `500`    | Maximum batch size in KB.                     |
+| `retryAttempts`    | `number`                 | `3`      | Retry attempts for failed requests.           |
+| `retryDelay`       | `number`                 | `1000`   | Base delay in ms between retries.             |
+| `middlewares`      | `EventMiddleware[]`      | `[]`     | Functions to transform events before sending. |
+| `onSuccess`        | `SuccessHandler`         | -        | Callback on successful send.                  |
+| `onError`          | `ErrorHandler`           | -        | Callback on failed send.                      |
+| `debug`            | `boolean`                | `false`  | Enables debug logging.                        |
 
 ---
 

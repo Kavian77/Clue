@@ -1,12 +1,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import './index.css';
+import "./index.css";
 
 // Mock fetch for testing
 const originalFetch = window.fetch;
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (input === "https://api.example.com/events") {
+    if (navigator.onLine === false) {
+      throw new Error("Network Error");
+    }
     await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

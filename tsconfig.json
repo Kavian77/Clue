@@ -1,9 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023"],
+    "lib": ["es2022", "dom", "dom.iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "paths": {
+      "@piq/*": ["./packages/*/src"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",

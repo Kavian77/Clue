@@ -1,70 +1,77 @@
 import {
-  type TrackerOptions,
   type TrackingEvent,
+  type EventDispatcher,
   type Tracker,
-} from '@piq/core';
+} from "@piq/core";
 
 export class ClickTracker implements Tracker {
-  public readonly type = 'click';
-  private options: TrackerOptions;
+  public readonly name: string;
+  private dispatcher: EventDispatcher;
   private handleClick: (event: MouseEvent) => void;
 
-  constructor(options: TrackerOptions) {
-    this.options = options;
+  constructor({
+    dispatcher,
+    name,
+  }: {
+    dispatcher: EventDispatcher;
+    name?: string;
+  }) {
+    this.name = name || "click";
+    this.dispatcher = dispatcher;
     this.handleClick = this.onClick.bind(this);
   }
 
   public start(): void {
-    document.addEventListener('click', this.handleClick, true);
+    document.addEventListener("click", this.handleClick, true);
   }
 
   public stop(): void {
-    document.removeEventListener('click', this.handleClick, true);
+    document.removeEventListener("click", this.handleClick, true);
   }
 
-  public track(event: TrackingEvent): void {
-    if (this.options.onBatchDispatch) {
-      void this.options.onBatchDispatch([event]).catch((error) => {
-        console.error('Failed to dispatch click event:', error);
-      });
-    }
+  private track(event: TrackingEvent): void {
+    void this.dispatcher(event).catch((error) => {
+      console.error("Failed to dispatch click event:", error);
+    });
   }
 
   private onClick(event: MouseEvent): void {
+    const timestamp = Date.now();
     const element = event.target as HTMLElement;
-    if (!element.hasAttribute('data-track-click')) return;
+    if (!element.hasAttribute(`data-piq-${this.name}`)) return;
 
-    const trackId = element.getAttribute('data-track-id');
-    const contextAttr = element.getAttribute('data-track-context');
+    const trackId = element.getAttribute("data-piq-id");
+    const universalContextAttribute = element.getAttribute("data-piq-context");
+    const localContextAttr = element.getAttribute(
+      `data-piq-${this.name}-context`
+    );
     let context: Record<string, unknown> = {};
 
     try {
-      if (contextAttr) {
-        context = JSON.parse(contextAttr);
+      if (localContextAttr) {
+        context = JSON.parse(localContextAttr);
       }
+      if (universalContextAttribute) {
+        context = { ...JSON.parse(universalContextAttribute), ...context };
+      }
+
       let parent = element.parentElement;
       while (parent) {
-        const parentContext = parent.getAttribute('data-track-context');
+        const parentContext = parent.getAttribute("data-piq-context");
         if (parentContext) {
           context = { ...JSON.parse(parentContext), ...context };
         }
         parent = parent.parentElement;
       }
     } catch (e) {
-      console.error('Failed to parse tracking context:', e);
+      console.error("Failed to parse tracking context:", e);
     }
 
     this.track({
       id: trackId ?? crypto.randomUUID(),
-      type: this.type,
-      timestamp: Date.now(),
+      type: this.name,
+      timestamp,
       context,
-      element: {
-        tag: element.tagName.toLowerCase(),
-        attributes: Object.fromEntries(
-          Array.from(element.attributes).map((attr) => [attr.name, attr.value])
-        ),
-      },
     });
   }
 }
