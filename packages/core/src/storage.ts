@@ -1,10 +1,10 @@
 import { openDB, DBSchema, IDBPDatabase } from "idb";
 import { type TrackingEvent } from "./types";
 
-const DB_NAME = "piq_tracking";
+const DB_NAME = "clue_tracking";
 const EVENTS_STORE = "pending_events";
 
-interface PiqDB extends DBSchema {
+interface clueDB extends DBSchema {
   [EVENTS_STORE]: {
     key: [string, number];
     value: TrackingEvent;
@@ -12,13 +12,13 @@ interface PiqDB extends DBSchema {
 }
 
 export class StorageManager {
-  private db: IDBPDatabase<PiqDB> | null = null;
+  private db: IDBPDatabase<clueDB> | null = null;
   private initPromise: Promise<void> | null = null;
 
   public async init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
     this.initPromise = (async () => {
-      this.db = await openDB<PiqDB>(DB_NAME, 1, {
+      this.db = await openDB<clueDB>(DB_NAME, 1, {
         upgrade(db) {
           if (!db.objectStoreNames.contains(EVENTS_STORE)) {
             db.createObjectStore(EVENTS_STORE, {
@@ -32,7 +32,7 @@ export class StorageManager {
     return this.initPromise;
   }
 
-  private getDatabase(): IDBPDatabase<PiqDB> {
+  private getDatabase(): IDBPDatabase<clueDB> {
     if (!this.db) {
       throw new Error("Database not initialized");
     }

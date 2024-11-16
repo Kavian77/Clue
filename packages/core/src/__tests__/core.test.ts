@@ -7,14 +7,14 @@ import {
   Mocked,
   afterEach,
 } from "vitest";
-import { Piq, TrackingEvent } from "../index";
+import { clue, TrackingEvent } from "../index";
 import { StorageManager } from "../storage";
 
 vi.mock("../storage");
 vi.mock("../logger");
 
-describe("Piq", () => {
-  let piq: Piq;
+describe("clue", () => {
+  let clue: clue;
   let storageManagerMock: Mocked<StorageManager>;
 
   const trackerOptions = {
@@ -34,28 +34,28 @@ describe("Piq", () => {
     storageManagerMock.storePendingEvents.mockResolvedValue(void 0);
     storageManagerMock.clearPendingEvents.mockResolvedValue(void 0);
 
-    // Initialize a new Piq instance for each test
-    piq = Piq.init(trackerOptions);
+    // Initialize a new clue instance for each test
+    clue = clue.init(trackerOptions);
 
-    // Inject the mocked instance to the Piq instance
+    // Inject the mocked instance to the clue instance
     // @ts-expect-error - storage is private
-    Piq["storage"] = storageManagerMock;
+    clue["storage"] = storageManagerMock;
   });
 
   afterEach(async () => {
-    await piq.stop();
-    Piq["instance"] = null;
+    await clue.stop();
+    clue["instance"] = null;
   });
 
   it("should initialize with options", () => {
-    expect(piq).toBeDefined();
-    expect(piq).toHaveProperty("options", trackerOptions);
+    expect(clue).toBeDefined();
+    expect(clue).toHaveProperty("options", trackerOptions);
   });
 
   it("should initialize storage and set isReady on start", async () => {
-    await piq.start();
+    await clue.start();
     expect(storageManagerMock.init).toHaveBeenCalled();
-    expect(piq["isReady"]).toBe(true);
+    expect(clue["isReady"]).toBe(true);
   });
 
   it("should add and remove global listeners on start and stop", async () => {
@@ -64,7 +64,7 @@ describe("Piq", () => {
     const documentAddListenerSpy = vi.spyOn(document, "addEventListener");
     const documentRemoveListenerSpy = vi.spyOn(document, "removeEventListener");
 
-    await piq.start();
+    await clue.start();
     expect(windowAddListenerSpy).toHaveBeenCalledWith(
       "online",
       expect.any(Function)
@@ -78,7 +78,7 @@ describe("Piq", () => {
       expect.any(Function)
     );
 
-    await piq.stop();
+    await clue.stop();
     expect(WindowRemoveListenerSpy).toHaveBeenCalledWith(
       "online",
       expect.any(Function)
@@ -105,10 +105,10 @@ describe("Piq", () => {
       type: "type",
       timestamp: 0,
     };
-    await piq["track"](event);
+    await clue["track"](event);
 
     expect(storageManagerMock.storePendingEvents).toHaveBeenCalledWith([event]);
-    expect(piq["events"]).toContainEqual(event);
+    expect(clue["events"]).toContainEqual(event);
   });
 
   it("should attempt to process pending events on visibility change to hidden", async () => {
@@ -117,10 +117,10 @@ describe("Piq", () => {
       writable: true,
     });
 
-    await piq.start();
+    await clue.start();
 
     // @ts-expect-error - tryProcessPendingEvents is private
-    const tryProcessSpy = vi.spyOn(piq, "tryProcessPendingEvents");
+    const tryProcessSpy = vi.spyOn(clue, "tryProcessPendingEvents");
 
     document.dispatchEvent(new Event("visibilitychange"));
     expect(tryProcessSpy).toHaveBeenCalled();
@@ -133,16 +133,16 @@ describe("Piq", () => {
     const offlineEvent = new Event("offline");
 
     window.dispatchEvent(onlineEvent);
-    expect(piq["isOnline"]).toBe(true);
+    expect(clue["isOnline"]).toBe(true);
 
     window.dispatchEvent(offlineEvent);
-    expect(piq["isOnline"]).toBe(false);
+    expect(clue["isOnline"]).toBe(false);
   });
 
   it("should update options when initialized with new options", () => {
     const newOptions = { ...trackerOptions, syncingInterval: 2000 };
-    piq = Piq.init(newOptions);
-    expect(piq["options"].syncingInterval).toBe(2000);
+    clue = clue.init(newOptions);
+    expect(clue["options"].syncingInterval).toBe(2000);
   });
 
   it("should send events to the endpoint and handle success", async () => {
@@ -155,8 +155,8 @@ describe("Piq", () => {
     const onSuccess = vi.fn();
     
     const event: TrackingEvent = { id: "testEvent", context: {}, type: "type", timestamp: 0 };
-    piq["options"].onSuccess = onSuccess;
-    const wasSendEventSuccessful = await piq["sendEvents"]([event]);
+    clue["options"].onSuccess = onSuccess;
+    const wasSendEventSuccessful = await clue["sendEvents"]([event]);
 
     expect(wasSendEventSuccessful).toBe(true);
     expect(fetchSpy).toHaveBeenCalledWith(
@@ -175,9 +175,9 @@ describe("Piq", () => {
       .mockImplementation(() => Promise.reject("Network error"));
     const event: TrackingEvent= { id: "testEvent", context: {}, type: "type", timestamp: 0 };
 
-    piq["options"].retryAttempts = 2;
+    clue["options"].retryAttempts = 2;
 
-    const sendEventResult = piq["sendEvents"]([event]);
+    const sendEventResult = clue["sendEvents"]([event]);
     const wasSendEventSuccessful = await sendEventResult;
 
     expect(wasSendEventSuccessful).toBe(false);
@@ -193,9 +193,9 @@ describe("Piq", () => {
       timestamp: 0,
     }));
     const maxBatchSizeInKB = 1;
-    piq["maxBatchSizeInKB"] = maxBatchSizeInKB;
+    clue["maxBatchSizeInKB"] = maxBatchSizeInKB;
 
-    const batchedEvents = piq["getBatchUpToSizeLimit"](events);
+    const batchedEvents = clue["getBatchUpToSizeLimit"](events);
     expect(batchedEvents.length).toBeLessThanOrEqual(events.length);
   });
 
@@ -208,11 +208,11 @@ describe("Piq", () => {
     };
 
     // @ts-expect-error - sendEvents is private
-    const sendEventsSpy = vi.spyOn(piq, "sendEvents").mockResolvedValue(true);
+    const sendEventsSpy = vi.spyOn(clue, "sendEvents").mockResolvedValue(true);
     storageManagerMock.getPendingEvents.mockResolvedValueOnce([event]);
     storageManagerMock.clearPendingEvents.mockResolvedValueOnce(void 0);
 
-    await piq["tryProcessPendingEvents"]();
+    await clue["tryProcessPendingEvents"]();
 
     expect(storageManagerMock.clearPendingEvents).toHaveBeenCalledWith([event]);
     sendEventsSpy.mockRestore();
@@ -222,11 +222,11 @@ describe("Piq", () => {
     const middleware = vi.fn(async (events: TrackingEvent[]) =>
       events.map((e) => ({ ...e, modified: true }))
     );
-    piq["options"].middlewares = [middleware];
+    clue["options"].middlewares = [middleware];
     const event: TrackingEvent = { id: "event1", context: {}, type: "type", timestamp: 0 };
 
-    await piq["track"](event);
-    const processedEvents = await piq["applyMiddlewares"]([event]);
+    await clue["track"](event);
+    const processedEvents = await clue["applyMiddlewares"]([event]);
 
     expect(middleware).toHaveBeenCalled();
     expect(processedEvents[0]).toHaveProperty("modified", true);

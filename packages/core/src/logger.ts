@@ -2,7 +2,7 @@ export class Logger {
   private isDebug: boolean;
   private prefix: string;
 
-  constructor(isDebug: boolean = false, prefix: string = '[PIQ]') {
+  constructor(isDebug: boolean = false, prefix: string = '[clue]') {
     this.isDebug = isDebug;
     this.prefix = prefix;
   }
