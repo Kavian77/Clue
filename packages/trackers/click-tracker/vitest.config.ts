@@ -18,7 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@piq/core": "/packages/core/src",
+      "@clue/core": "/packages/core/src",
     },
   },
 });

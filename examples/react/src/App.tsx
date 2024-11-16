@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Piq } from "@piq/core";
-import { ClickTracker } from "@piq/click-tracker";
+import { clue } from "@clue/core";
+import { ClickTracker } from "@clue/click-tracker";
 
 export function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const tracker = Piq.init({
+    const tracker = clue.init({
       debug: true,
       endpoint: "https://api.example.com/events",
       maxBatchSizeInKB: 100,
@@ -43,7 +43,7 @@ export function App() {
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8"
-      data-piq-context={JSON.stringify({
+      data-clue-context={JSON.stringify({
         pageName: "Home",
       })}
     >
@@ -53,13 +53,13 @@ export function App() {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-              data-piq-id="menu-toggle"
-              data-piq-click
-              data-piq-context='{"location":"header"}'
+              data-clue-id="menu-toggle"
+              data-clue-click
+              data-clue-context='{"location":"header"}'
             >
               Hamburger Menu
             </button>
-            <h1 className="text-2xl font-bold">PIQ Demo</h1>
+            <h1 className="text-2xl font-bold">clue Demo</h1>
           </div>
         </nav>
       </header>
@@ -70,13 +70,13 @@ export function App() {
             <h2 className="text-xl font-semibold mb-4">Primary Button</h2>
             <button
               className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg transition-colors w-full"
-              data-piq-id="primary-button"
-              data-piq-click
-              data-piq-click-context={JSON.stringify({
+              data-clue-id="primary-button"
+              data-clue-click
+              data-clue-click-context={JSON.stringify({
                 "click-context":
                   "This context will be attached all click events triggered by this button",
               })}
-              data-piq-context={JSON.stringify({
+              data-clue-context={JSON.stringify({
                 "universal-context":
                   "This context will be attached to all events triggered either by this button or its children",
               })}
@@ -89,9 +89,9 @@ export function App() {
             <h2 className="text-xl font-semibold mb-4">Secondary Button</h2>
             <button
               className="bg-gray-600 hover:bg-gray-500 px-6 py-2 rounded-lg transition-colors w-full"
-              data-piq-id="secondary-button"
-              data-piq-click
-              data-piq-context={JSON.stringify({
+              data-clue-id="secondary-button"
+              data-clue-click
+              data-clue-context={JSON.stringify({
                 "universal-context":
                   "This context will be attached to all events triggered either by this button or its children",
               })}

@@ -7,8 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // TODO: Remove these once the packages are published
-      '@piq/core': '../../../packages/core/src',
-      '@piq/click-tracker': '../../../packages/trackers/click-tracker/src',
+      '@clue/core': '../../../packages/core/src',
+      '@clue/click-tracker': '../../../packages/trackers/click-tracker/src',
     },
   },
 });

@@ -10,8 +10,8 @@ import { Logger } from "./logger";
 
 const isOnBrowser = typeof window !== "undefined";
 
-export class Piq {
-  private static instance: Piq | null = null;
+export class clue {
+  private static instance: clue | null = null;
   private events: TrackingEvent[] = [];
   private syncingInterval: number;
   private maxBatchSizeInKB: BatchSize;
@@ -61,13 +61,13 @@ export class Piq {
     }
   }
 
-  public static init(options?: TrackerOptions): Piq {
-    if (!Piq.instance) {
-      Piq.instance = new Piq(options);
+  public static init(options?: TrackerOptions): clue {
+    if (!clue.instance) {
+      clue.instance = new clue(options);
     } else if (options) {
-      Piq.instance.updateOptions(options);
+      clue.instance.updateOptions(options);
     }
-    return Piq.instance;
+    return clue.instance;
   }
 
   public async start(): Promise<void> {

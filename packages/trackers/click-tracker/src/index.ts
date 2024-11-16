@@ -2,7 +2,7 @@ import {
   type TrackingEvent,
   type EventDispatcher,
   type Tracker,
-} from "@piq/core";
+} from "@clue/core";
 
 export class ClickTracker implements Tracker {
   public readonly name: string;
@@ -38,12 +38,12 @@ export class ClickTracker implements Tracker {
   private onClick(event: MouseEvent): void {
     const timestamp = Date.now();
     const element = event.target as HTMLElement;
-    if (!element.hasAttribute(`data-piq-${this.name}`)) return;
+    if (!element.hasAttribute(`data-clue-${this.name}`)) return;
 
-    const trackId = element.getAttribute("data-piq-id");
-    const universalContextAttribute = element.getAttribute("data-piq-context");
+    const trackId = element.getAttribute("data-clue-id");
+    const universalContextAttribute = element.getAttribute("data-clue-context");
     const localContextAttr = element.getAttribute(
-      `data-piq-${this.name}-context`
+      `data-clue-${this.name}-context`
     );
     let context: Record<string, unknown> = {};
 
@@ -57,7 +57,7 @@ export class ClickTracker implements Tracker {
 
       let parent = element.parentElement;
       while (parent) {
-        const parentContext = parent.getAttribute("data-piq-context");
+        const parentContext = parent.getAttribute("data-clue-context");
         if (parentContext) {
           context = { ...JSON.parse(parentContext), ...context };
         }

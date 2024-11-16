@@ -58,7 +58,7 @@ describe("StorageManager", () => {
       await expect(storageManager.init()).resolves.toBeUndefined();
       expect(openDB).toHaveBeenCalledTimes(1);
       expect(openDB).toHaveBeenCalledWith(
-        "piq_tracking",
+        "clue_tracking",
         1,
         expect.any(Object)
       );

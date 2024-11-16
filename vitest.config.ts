@@ -13,9 +13,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@piq/core': '/packages/core/src',
-      '@piq/click-tracker': '/packages/trackers/click-tracker/src',
-      '@piq/utils': '/packages/utils/src'
+      '@clue/core': '/packages/core/src',
+      '@clue/click-tracker': '/packages/trackers/click-tracker/src',
+      '@clue/utils': '/packages/utils/src'
     }
   }
 });
