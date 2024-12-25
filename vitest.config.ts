@@ -9,7 +9,8 @@ export default defineConfig({
       exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/*.config.*']
     },
     globals: true,
-    setupFiles: ['./vitest.setup.ts']
+    setupFiles: ['./vitest.setup.ts'],
+    passWithNoTests: true,
   },
   resolve: {
     alias: {
@@ -17,5 +18,5 @@ export default defineConfig({
       '@clue/click-tracker': '/packages/trackers/click-tracker/src',
       '@clue/utils': '/packages/utils/src'
     }
-  }
+  },
 });

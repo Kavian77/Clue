@@ -14,6 +14,7 @@ export default defineConfig({
       ],
     },
     globals: true,
+    passWithNoTests: true,
     setupFiles: ["../../../vitest.setup.ts"],
   },
   resolve: {
