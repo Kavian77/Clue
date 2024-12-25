@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { clue } from "@clue/core";
+import { Clue } from "@clue/core";
 import { ClickTracker } from "@clue/click-tracker";
 
 export function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const tracker = clue.init({
+    const tracker = Clue.init({
       debug: true,
       endpoint: "https://api.example.com/events",
       maxBatchSizeInKB: 100,

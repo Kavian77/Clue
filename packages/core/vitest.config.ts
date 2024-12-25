@@ -9,6 +9,7 @@ export default defineConfig({
       exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/*.config.*']
     },
     globals: true,
+    passWithNoTests: true,
     setupFiles: ['../../vitest.setup.ts']
   }
 });
