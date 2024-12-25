@@ -7,14 +7,14 @@ import {
   Mocked,
   afterEach,
 } from "vitest";
-import { clue, TrackingEvent } from "../index";
+import { Clue, TrackingEvent } from "../index";
 import { StorageManager } from "../storage";
 
 vi.mock("../storage");
 vi.mock("../logger");
 
 describe("clue", () => {
-  let clue: clue;
+  let clue: Clue;
   let storageManagerMock: Mocked<StorageManager>;
 
   const trackerOptions = {
@@ -35,16 +35,15 @@ describe("clue", () => {
     storageManagerMock.clearPendingEvents.mockResolvedValue(void 0);
 
     // Initialize a new clue instance for each test
-    clue = clue.init(trackerOptions);
+    clue = Clue.init(trackerOptions);
 
     // Inject the mocked instance to the clue instance
-    // @ts-expect-error - storage is private
     clue["storage"] = storageManagerMock;
   });
 
   afterEach(async () => {
     await clue.stop();
-    clue["instance"] = null;
+    Clue["instance"] = null;
   });
 
   it("should initialize with options", () => {
@@ -141,7 +140,7 @@ describe("clue", () => {
 
   it("should update options when initialized with new options", () => {
     const newOptions = { ...trackerOptions, syncingInterval: 2000 };
-    clue = clue.init(newOptions);
+    clue = Clue.init(newOptions);
     expect(clue["options"].syncingInterval).toBe(2000);
   });
 
