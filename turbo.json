@@ -10,13 +10,12 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "check-types": {
+      "inputs": ["packages/**", "tsconfig.base.json", "tsconfig.json"],
+      "outputs": []
+    },
     "lint": {
-      "inputs": [
-        "packages/**",
-        "eslint.config.js",
-        "tsconfig.base.json",
-        "tsconfig.json"
-      ],
+      "inputs": ["packages/**", "eslint.config.js"],
       "outputs": []
     }
   }
