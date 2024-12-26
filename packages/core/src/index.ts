@@ -16,7 +16,7 @@ export class Cluesive {
   private syncingInterval: number;
   private maxBatchSizeInKB: BatchSize;
   private globalContext: Record<string, unknown>;
-  private batchTimeout: number | null = null;
+  private batchTimeout: NodeJS.Timeout | null = null;
   private trackers: Map<string, Tracker> = new Map();
   private options: TrackerOptions;
   private storage: StorageManager;
