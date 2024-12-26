@@ -5,7 +5,7 @@ import noOnlyTestsPlugin from "eslint-plugin-no-only-tests";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["**/dist"] },
   {
     extends: [
       js.configs.recommended,
