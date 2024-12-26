@@ -11,6 +11,7 @@
       "outputs": []
     },
     "lint": {
+      "inputs": ["packages/**", "eslint.config.js", "tsconfig.base.json", "tsconfig.json"],
       "outputs": []
     }
   }
