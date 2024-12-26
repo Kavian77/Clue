@@ -168,7 +168,7 @@ describe("cluesive", () => {
     fetchSpy.mockRestore();
   });
 
-  it.only("should retry sending events on failure up to retryAttempts", async () => {
+  it("should retry sending events on failure up to retryAttempts", async () => {
     const fetchSpy = vi
       .spyOn(window, "fetch")
       .mockImplementation(() => Promise.reject("Network error"));
