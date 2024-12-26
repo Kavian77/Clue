@@ -2,7 +2,7 @@ import {
   type TrackingEvent,
   type EventDispatcher,
   type Tracker,
-} from "@clue/core";
+} from "@cluesive/core";
 
 export class ClickTracker implements Tracker {
   public readonly name: string;
@@ -38,12 +38,12 @@ export class ClickTracker implements Tracker {
   private onClick(event: MouseEvent): void {
     const timestamp = Date.now();
     const element = event.target as HTMLElement;
-    if (!element.hasAttribute(`data-clue-${this.name}`)) return;
+    if (!element.hasAttribute(`data-cv-${this.name}`)) return;
 
-    const trackId = element.getAttribute("data-clue-id");
-    const universalContextAttribute = element.getAttribute("data-clue-context");
+    const trackId = element.getAttribute("data-cv-id");
+    const universalContextAttribute = element.getAttribute("data-cv-context");
     const localContextAttr = element.getAttribute(
-      `data-clue-${this.name}-context`
+      `data-cv-${this.name}-context`
     );
     let context: Record<string, unknown> = {};
 
@@ -57,7 +57,7 @@ export class ClickTracker implements Tracker {
 
       let parent = element.parentElement;
       while (parent) {
-        const parentContext = parent.getAttribute("data-clue-context");
+        const parentContext = parent.getAttribute("data-cv-context");
         if (parentContext) {
           context = { ...JSON.parse(parentContext), ...context };
         }

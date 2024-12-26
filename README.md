@@ -1,9 +1,9 @@
-# 🎯 Clue
+# 🎯 Cluesive
 
-A **lightweight**, **type-safe**, **fault-tolerant** event tracking library for modern web applications. Clue Core delivers essential tracking functionality with a modular, plugin-based architecture, making it ideal for high-performance applications while minimizing bundle size.
+A **lightweight**, **type-safe**, **fault-tolerant** event tracking library for modern web applications. Cluesive Core delivers essential tracking functionality with a modular, plugin-based architecture, making it ideal for high-performance applications while minimizing bundle size.
 
-[![npm version](https://img.shields.io/npm/v/@clue/core.svg)](https://www.npmjs.com/package/@clue/core)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@clue/core)](https://bundlephobia.com/package/@clue/core)
+[![npm version](https://img.shields.io/npm/v/@cluesive/core.svg)](https://www.npmjs.com/package/@cluesive/core)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@cluesive/core)](https://bundlephobia.com/package/@cluesive/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org)
 
 ---
@@ -26,7 +26,7 @@ A **lightweight**, **type-safe**, **fault-tolerant** event tracking library for 
 
 ### 🔄 Automatic Context Inheritance
 
-Clue Core’s **Automatic Context Inheritance** feature simplifies event tracking by automatically gathering contextual data from parent elements up the DOM hierarchy. This provides fully contextualized events without redundant declarations and is ideal for applications with complex or deeply nested components.
+Cluesive Core’s **Automatic Context Inheritance** feature simplifies event tracking by automatically gathering contextual data from parent elements up the DOM hierarchy. This provides fully contextualized events without redundant declarations and is ideal for applications with complex or deeply nested components.
 
 **Benefits**:
 
@@ -36,7 +36,7 @@ Clue Core’s **Automatic Context Inheritance** feature simplifies event trackin
 
 ### 🔄 Smart Retry Logic
 
-To ensure fault tolerance, Clue Core automatically retries failed event transmissions using exponential backoff. This feature ensures data reliability even under network instability.
+To ensure fault tolerance, Cluesive Core automatically retries failed event transmissions using exponential backoff. This feature ensures data reliability even under network instability.
 
 **Retry Logic**:
 
@@ -52,15 +52,15 @@ To ensure fault tolerance, Clue Core automatically retries failed event transmis
 
 ### 🌐 Offline Support
 
-Clue Core includes built-in offline support, queuing events when users are offline and automatically syncing them upon reconnection. This feature is essential for applications with users on unstable networks, ensuring no data loss during offline periods.
+Cluesive Core includes built-in offline support, queuing events when users are offline and automatically syncing them upon reconnection. This feature is essential for applications with users on unstable networks, ensuring no data loss during offline periods.
 
 ### 📦 Smart Batching
 
-With smart batching, Clue Core efficiently groups events to reduce the number of network requests, minimizing the impact on bandwidth and enhancing performance. Batching parameters like `syncingInterval` and `maxBatchSizeInKB` can be configured to adjust the frequency and size of batches, striking a balance between real-time data and network load.
+With smart batching, Cluesive Core efficiently groups events to reduce the number of network requests, minimizing the impact on bandwidth and enhancing performance. Batching parameters like `syncingInterval` and `maxBatchSizeInKB` can be configured to adjust the frequency and size of batches, striking a balance between real-time data and network load.
 
 ### 🔧 Middleware Support
 
-Clue Core enables you to add custom middleware functions that can transform, enrich, or validate events before they are sent. Middleware functions can be used to:
+Cluesive Core enables you to add custom middleware functions that can transform, enrich, or validate events before they are sent. Middleware functions can be used to:
 
 - Append additional context (e.g., environment, viewport size)
 - Filter out sensitive data
@@ -68,27 +68,27 @@ Clue Core enables you to add custom middleware functions that can transform, enr
 
 ### 🚀 Lightweight
 
-Clue Core is optimized for performance with the minimal dependencies, making it highly suitable for resource-conscious applications. Its modular design means you can include only the plugins you need, further keeping your bundle size minimal.
+Cluesive Core is optimized for performance with the minimal dependencies, making it highly suitable for resource-conscious applications. Its modular design means you can include only the plugins you need, further keeping your bundle size minimal.
 
 ---
 
 ## 📦 Installation
 
-To install Clue Core, use the following command:
+To install Cluesive Core, use the following command:
 
 ```bash
-npm install @clue/core
+npm install @cluesive/core
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-Here’s a quick guide to setting up Clue Core and starting event tracking with context inheritance:
+Here’s a quick guide to setting up Cluesive Core and starting event tracking with context inheritance:
 
 ```typescript
-import { CoreTracker } from "@clue/core";
-import { ClickTracker } from "@clue/click-tracker";
+import { CoreTracker } from "@cluesive/core";
+import { ClickTracker } from "@cluesive/click-tracker";
 
 // Initialize the tracker
 const tracker = CoreTracker.getInstance({
@@ -124,33 +124,33 @@ tracker.start();
 
 ### Example 1: Click Tracking with Context Inheritance
 
-In this example, context attributes are defined at various levels, such as app-level, section-level, and action-specific contexts. Clue Core automatically collects and combines these attributes so that each event has full context.
+In this example, context attributes are defined at various levels, such as app-level, section-level, and action-specific contexts. Cluesive Core automatically collects and combines these attributes so that each event has full context.
 
 ```html
 <!-- App Shell: Global context for all events -->
-<div data-clue-context='{"app":"myapp","version":"1.0.0"}'>
+<div data-cv-context='{"app":"myapp","version":"1.0.0"}'>
   <!-- Navigation Section -->
-  <nav data-clue-context='{"section":"navigation"}'>
+  <nav data-cv-context='{"section":"navigation"}'>
     <button
-      data-clue-click="true"
-      data-clue-id="menu-toggle"
-      data-clue-context='{"action":"toggle-menu"}'
+      data-cv-click="true"
+      data-cv-id="menu-toggle"
+      data-cv-context='{"action":"toggle-menu"}'
     >
       Menu
     </button>
   </nav>
 
   <!-- Main Content with Nested Contexts -->
-  <main data-clue-context='{"section":"content"}'>
+  <main data-cv-context='{"section":"content"}'>
     <!-- Product Section -->
     <section
-      data-clue-context='{"subsection":"products","category":"electronics"}'
+      data-cv-context='{"subsection":"products","category":"electronics"}'
     >
-      <div data-clue-context='{"product":"laptop","price":999}'>
+      <div data-cv-context='{"product":"laptop","price":999}'>
         <button
-          data-clue-click="true"
-          data-clue-id="add-to-cart"
-          data-clue-context='{"action":"add-to-cart"}'
+          data-cv-click="true"
+          data-cv-id="add-to-cart"
+          data-cv-context='{"action":"add-to-cart"}'
         >
           Add to Cart
         </button>
@@ -252,11 +252,11 @@ CoreTracker.getInstance({
 
 ## 🔌 Available Plugins
 
-- [@clue/click-tracker](https://www.npmjs.com/package/@clue/click-tracker): Easily track click events.
+- [@cluesive/click-tracker](https://www.npmjs.com/package/@cluesive/click-tracker): Easily track click events.
 - More plugins are on the way!
 
 ---
 
 ## 📝 License
 
-MIT © Clue
+MIT © Cluesive

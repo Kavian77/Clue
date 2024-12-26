@@ -7,8 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // TODO: Remove these once the packages are published
-      '@clue/core': '../../../packages/core/src',
-      '@clue/click-tracker': '../../../packages/trackers/click-tracker/src',
+      '@cluesive/core': '../../../packages/core/src',
+      '@cluesive/click-tracker': '../../../packages/trackers/click-tracker/src',
     },
   },
 });

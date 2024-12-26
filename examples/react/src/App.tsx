@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Clue } from "@clue/core";
-import { ClickTracker } from "@clue/click-tracker";
+import { Cluesive } from "@cluesive/core";
+import { ClickTracker } from "@cluesive/click-tracker";
 
 export function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const tracker = Clue.init({
+    const tracker = Cluesive.init({
       debug: true,
       endpoint: "https://api.example.com/events",
       maxBatchSizeInKB: 100,
@@ -43,7 +43,7 @@ export function App() {
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8"
-      data-clue-context={JSON.stringify({
+      data-cv-context={JSON.stringify({
         pageName: "Home",
       })}
     >
@@ -53,13 +53,13 @@ export function App() {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-              data-clue-id="menu-toggle"
-              data-clue-click
-              data-clue-context='{"location":"header"}'
+              data-cv-id="menu-toggle"
+              data-cv-click
+              data-cv-context='{"location":"header"}'
             >
               Hamburger Menu
             </button>
-            <h1 className="text-2xl font-bold">clue Demo</h1>
+            <h1 className="text-2xl font-bold">cluesive Demo</h1>
           </div>
         </nav>
       </header>
@@ -70,13 +70,13 @@ export function App() {
             <h2 className="text-xl font-semibold mb-4">Primary Button</h2>
             <button
               className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg transition-colors w-full"
-              data-clue-id="primary-button"
-              data-clue-click
-              data-clue-click-context={JSON.stringify({
+              data-cv-id="primary-button"
+              data-cv-click
+              data-cv-click-context={JSON.stringify({
                 "click-context":
                   "This context will be attached all click events triggered by this button",
               })}
-              data-clue-context={JSON.stringify({
+              data-cv-context={JSON.stringify({
                 "universal-context":
                   "This context will be attached to all events triggered either by this button or its children",
               })}
@@ -89,9 +89,9 @@ export function App() {
             <h2 className="text-xl font-semibold mb-4">Secondary Button</h2>
             <button
               className="bg-gray-600 hover:bg-gray-500 px-6 py-2 rounded-lg transition-colors w-full"
-              data-clue-id="secondary-button"
-              data-clue-click
-              data-clue-context={JSON.stringify({
+              data-cv-id="secondary-button"
+              data-cv-click
+              data-cv-context={JSON.stringify({
                 "universal-context":
                   "This context will be attached to all events triggered either by this button or its children",
               })}

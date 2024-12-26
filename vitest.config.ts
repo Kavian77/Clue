@@ -14,9 +14,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@clue/core': '/packages/core/src',
-      '@clue/click-tracker': '/packages/trackers/click-tracker/src',
-      '@clue/utils': '/packages/utils/src'
+      '@cluesive/core': '/packages/core/src',
+      '@cluesive/click-tracker': '/packages/trackers/click-tracker/src',
+      '@cluesive/utils': '/packages/utils/src'
     }
   },
 });
