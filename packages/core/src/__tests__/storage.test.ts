@@ -1,5 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, beforeEach, afterEach, it, expect, vi, type Mock } from "vitest";
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  vi,
+  type Mock,
+} from "vitest";
 import { openDB, type IDBPDatabase } from "idb";
 import { StorageManager } from "../storage";
 import type { TrackingEvent } from "../types";
