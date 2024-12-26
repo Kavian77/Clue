@@ -19,7 +19,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@clue/core": "/packages/core/src",
+      "@cluesive/core": "/packages/core/src",
     },
   },
 });

@@ -10,8 +10,8 @@ import { Logger } from "./logger";
 
 const isOnBrowser = typeof window !== "undefined";
 
-export class Clue {
-  private static instance: Clue | null = null;
+export class Cluesive {
+  private static instance: Cluesive | null = null;
   private events: TrackingEvent[] = [];
   private syncingInterval: number;
   private maxBatchSizeInKB: BatchSize;
@@ -61,13 +61,13 @@ export class Clue {
     }
   }
 
-  public static init(options?: TrackerOptions): Clue {
-    if (!Clue.instance) {
-      Clue.instance = new Clue(options);
+  public static init(options?: TrackerOptions): Cluesive {
+    if (!Cluesive.instance) {
+      Cluesive.instance = new Cluesive(options);
     } else if (options) {
-      Clue.instance.updateOptions(options);
+      Cluesive.instance.updateOptions(options);
     }
-    return Clue.instance;
+    return Cluesive.instance;
   }
 
   public async start(): Promise<void> {
