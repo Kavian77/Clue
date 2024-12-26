@@ -1,8 +1,8 @@
-import {
-  type TrackerOptions,
-  type TrackingEvent,
-  type BatchSize,
-  type Tracker,
+import type {
+  TrackerOptions,
+  TrackingEvent,
+  BatchSize,
+  Tracker,
   EventDispatcher,
 } from "./types";
 import { StorageManager } from "./storage";
@@ -208,21 +208,27 @@ export class Cluesive {
     let currentSize = 0;
     let batchEndIndex = events.length;
 
-    if (events.length > 0) {
-      const firstEventSize = this.calculateBatchSize([events[0]]);
+    const firstEvent = events[0];
+    if (firstEvent) {
+      const firstEventSize = this.calculateBatchSize([firstEvent]);
       if (firstEventSize > this.maxBatchSizeInKB) {
         this.logger.warn(
           `Event size (${firstEventSize.toFixed(2)}KB) exceeds batch limit (${
             this.maxBatchSizeInKB
           }KB). Processing anyway.`,
         );
-        return [events[0]];
+        return [firstEvent];
       }
       currentSize = firstEventSize;
     }
 
     for (let i = 1; i < events.length; i++) {
-      const eventSize = this.calculateBatchSize([events[i]]);
+      const event = events[i];
+      if (!event) {
+        continue;
+      }
+
+      const eventSize = this.calculateBatchSize([event]);
       if (currentSize + eventSize > this.maxBatchSizeInKB) {
         batchEndIndex = i;
         break;
