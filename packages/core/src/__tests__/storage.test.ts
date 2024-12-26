@@ -60,7 +60,7 @@ describe("StorageManager", () => {
       expect(openDB).toHaveBeenCalledWith(
         "cluesive_tracking",
         1,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -84,7 +84,7 @@ describe("StorageManager", () => {
     it("should store events successfully", async () => {
       mockObjectStore.add.mockResolvedValue(undefined);
       await expect(
-        storageManager.storePendingEvents([mockEvent])
+        storageManager.storePendingEvents([mockEvent]),
       ).resolves.toBeUndefined();
       expect(mockObjectStore.add).toHaveBeenCalledWith(mockEvent);
     });
@@ -104,7 +104,7 @@ describe("StorageManager", () => {
       }
 
       await expect(rejectSpy).toHaveBeenCalledWith(
-        new Error("Transaction failed")
+        new Error("Transaction failed"),
       );
     });
   });
@@ -125,7 +125,7 @@ describe("StorageManager", () => {
     it("should handle errors when retrieving events", async () => {
       mockObjectStore.getAll.mockRejectedValue(new Error("Read error"));
       await expect(storageManager.getPendingEvents()).rejects.toThrow(
-        "Read error"
+        "Read error",
       );
     });
   });
@@ -138,7 +138,7 @@ describe("StorageManager", () => {
     it("should clear specified events", async () => {
       mockObjectStore.delete.mockResolvedValue(undefined);
       await expect(
-        storageManager.clearPendingEvents([mockEvent])
+        storageManager.clearPendingEvents([mockEvent]),
       ).resolves.toBeUndefined();
       expect(mockObjectStore.delete).toHaveBeenCalledWith([
         mockEvent.id,
@@ -161,7 +161,7 @@ describe("StorageManager", () => {
       }
 
       await expect(rejectSpy).toHaveBeenCalledWith(
-        new Error("Transaction failed")
+        new Error("Transaction failed"),
       );
     });
   });

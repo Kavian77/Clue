@@ -43,7 +43,7 @@ export class ClickTracker implements Tracker {
     const trackId = element.getAttribute("data-cv-id");
     const universalContextAttribute = element.getAttribute("data-cv-context");
     const localContextAttr = element.getAttribute(
-      `data-cv-${this.name}-context`
+      `data-cv-${this.name}-context`,
     );
     let context: Record<string, unknown> = {};
 

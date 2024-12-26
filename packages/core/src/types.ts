@@ -11,12 +11,12 @@ export type TrackingEvent = z.infer<typeof TrackingEventSchema>;
 export type BatchSize = number | "disabled";
 
 export type EventMiddleware = (
-  events: TrackingEvent[]
+  events: TrackingEvent[],
 ) => TrackingEvent[] | Promise<TrackingEvent[]>;
 export type SuccessHandler = (events: TrackingEvent[]) => void | Promise<void>;
 export type ErrorHandler = (
   error: Error,
-  events: TrackingEvent[]
+  events: TrackingEvent[],
 ) => void | Promise<void>;
 
 export interface TrackerOptions {

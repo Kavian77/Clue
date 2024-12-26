@@ -2,6 +2,6 @@
   "files": [],
   "references": [
     { "path": "packages/core" },
-    { "path": "packages/trackers/click-tracker" },
+    { "path": "packages/trackers/click-tracker" }
   ]
 }
