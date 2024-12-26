@@ -66,29 +66,29 @@ describe("cluesive", () => {
     await cluesive.start();
     expect(windowAddListenerSpy).toHaveBeenCalledWith(
       "online",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(windowAddListenerSpy).toHaveBeenCalledWith(
       "offline",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(documentAddListenerSpy).toHaveBeenCalledWith(
       "visibilitychange",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     await cluesive.stop();
     expect(WindowRemoveListenerSpy).toHaveBeenCalledWith(
       "online",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(WindowRemoveListenerSpy).toHaveBeenCalledWith(
       "offline",
-      expect.any(Function)
+      expect.any(Function),
     );
     expect(documentRemoveListenerSpy).toHaveBeenCalledWith(
       "visibilitychange",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     windowAddListenerSpy.mockRestore();
@@ -149,11 +149,16 @@ describe("cluesive", () => {
       new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      })
+      }),
     );
     const onSuccess = vi.fn();
-    
-    const event: TrackingEvent = { id: "testEvent", context: {}, type: "type", timestamp: 0 };
+
+    const event: TrackingEvent = {
+      id: "testEvent",
+      context: {},
+      type: "type",
+      timestamp: 0,
+    };
     cluesive["options"].onSuccess = onSuccess;
     const wasSendEventSuccessful = await cluesive["sendEvents"]([event]);
 
@@ -162,7 +167,7 @@ describe("cluesive", () => {
       trackerOptions.endpoint,
       expect.objectContaining({
         body: JSON.stringify({ events: [event] }),
-      })
+      }),
     );
     expect(onSuccess).toHaveBeenCalledWith([event]);
     fetchSpy.mockRestore();
@@ -172,7 +177,12 @@ describe("cluesive", () => {
     const fetchSpy = vi
       .spyOn(window, "fetch")
       .mockImplementation(() => Promise.reject("Network error"));
-    const event: TrackingEvent= { id: "testEvent", context: {}, type: "type", timestamp: 0 };
+    const event: TrackingEvent = {
+      id: "testEvent",
+      context: {},
+      type: "type",
+      timestamp: 0,
+    };
 
     cluesive["options"].retryAttempts = 2;
 
@@ -206,8 +216,10 @@ describe("cluesive", () => {
       timestamp: 0,
     };
 
-    // @ts-expect-error - sendEvents is private
-    const sendEventsSpy = vi.spyOn(cluesive, "sendEvents").mockResolvedValue(true);
+    const sendEventsSpy = vi
+      // @ts-expect-error - sendEvents is private
+      .spyOn<Cluesive, boolean>(cluesive, "sendEvents")
+      .mockResolvedValue(true);
     storageManagerMock.getPendingEvents.mockResolvedValueOnce([event]);
     storageManagerMock.clearPendingEvents.mockResolvedValueOnce(void 0);
 
@@ -219,10 +231,15 @@ describe("cluesive", () => {
 
   it("should apply middlewares before sending events", async () => {
     const middleware = vi.fn(async (events: TrackingEvent[]) =>
-      events.map((e) => ({ ...e, modified: true }))
+      events.map((e) => ({ ...e, modified: true })),
     );
     cluesive["options"].middlewares = [middleware];
-    const event: TrackingEvent = { id: "event1", context: {}, type: "type", timestamp: 0 };
+    const event: TrackingEvent = {
+      id: "event1",
+      context: {},
+      type: "type",
+      timestamp: 0,
+    };
 
     await cluesive["track"](event);
     const processedEvents = await cluesive["applyMiddlewares"]([event]);

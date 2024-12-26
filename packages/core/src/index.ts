@@ -50,7 +50,7 @@ export class Cluesive {
     window.removeEventListener("offline", this.handleOffline);
     document.removeEventListener(
       "visibilitychange",
-      this.handleVisibilityChange
+      this.handleVisibilityChange,
     );
   }
 
@@ -107,7 +107,7 @@ export class Cluesive {
       dispatcher: EventDispatcher;
       name?: string;
     }) => Tracker,
-    options: { name?: string } = {}
+    options: { name?: string } = {},
   ): this {
     const tracker = new TrackerConstructor({
       ...options,
@@ -130,7 +130,7 @@ export class Cluesive {
   }
 
   private async applyMiddlewares(
-    events: TrackingEvent[]
+    events: TrackingEvent[],
   ): Promise<TrackingEvent[]> {
     let processedEvents = [...events];
 
@@ -157,11 +157,11 @@ export class Cluesive {
     if (processedEvents.length === 0) {
       return true;
     }
-    
+
     const retryAttempts = this.options.retryAttempts ?? 3;
     const retryDelay = this.options.retryDelay ?? 1000;
     let attempt = 0;
-    
+
     while (attempt < retryAttempts) {
       try {
         const response = await fetch(this.options.endpoint, {
@@ -173,7 +173,7 @@ export class Cluesive {
           body: JSON.stringify({ events: processedEvents }),
           keepalive: document.visibilityState === "hidden",
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -214,7 +214,7 @@ export class Cluesive {
         this.logger.warn(
           `Event size (${firstEventSize.toFixed(2)}KB) exceeds batch limit (${
             this.maxBatchSizeInKB
-          }KB). Processing anyway.`
+          }KB). Processing anyway.`,
         );
         return [events[0]];
       }
@@ -249,7 +249,7 @@ export class Cluesive {
     this.events.push(enrichedEvent);
     this.logger.info(
       "Event added to memory queue. Queue size:",
-      this.events.length
+      this.events.length,
     );
     this.logger.groupEnd();
   }

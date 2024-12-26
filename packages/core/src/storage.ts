@@ -63,7 +63,7 @@ export class StorageManager {
           if (attempt < 3) {
             setTimeout(
               () => retryOperation(attempt + 1),
-              Math.pow(2, attempt) * 1000
+              Math.pow(2, attempt) * 1000,
             );
           } else {
             reject(error);
@@ -117,7 +117,7 @@ export class StorageManager {
           if (attempt < 3) {
             setTimeout(
               () => retryOperation(attempt + 1),
-              Math.pow(2, attempt) * 1000
+              Math.pow(2, attempt) * 1000,
             );
           } else {
             reject(error);
