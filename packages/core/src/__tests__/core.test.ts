@@ -4,10 +4,10 @@ import {
   expect,
   vi,
   beforeEach,
-  Mocked,
+  type Mocked,
   afterEach,
 } from "vitest";
-import { Cluesive, TrackingEvent } from "../index";
+import { Cluesive, type TrackingEvent } from "../index";
 import { StorageManager } from "../storage";
 
 vi.mock("../storage");

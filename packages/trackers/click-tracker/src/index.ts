@@ -30,7 +30,7 @@ export class ClickTracker implements Tracker {
   }
 
   private track(event: TrackingEvent): void {
-    void this.dispatcher(event).catch((error) => {
+    void this.dispatcher(event).catch((error: unknown) => {
       console.error("Failed to dispatch click event:", error);
     });
   }

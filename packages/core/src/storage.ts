@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBPDatabase } from "idb";
+import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import { type TrackingEvent } from "./types";
 
 const DB_NAME = "cluesive_tracking";
