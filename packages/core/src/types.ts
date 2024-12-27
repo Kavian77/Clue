@@ -1,13 +1,10 @@
-import { z } from "zod";
+export type TrackingEvent = {
+  id: string;
+  type: string;
+  timestamp: number;
+  context: Record<string, unknown>;
+};
 
-export const TrackingEventSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  timestamp: z.number(),
-  context: z.record(z.unknown()),
-});
-
-export type TrackingEvent = z.infer<typeof TrackingEventSchema>;
 export type BatchSize = number | "disabled";
 
 export type EventMiddleware = (
